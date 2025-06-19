@@ -1,0 +1,4 @@
+frontend/venv/
+frontend/__pycache__/
+backend/go.mod
+backend/go.sum

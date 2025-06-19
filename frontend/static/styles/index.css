@@ -1,0 +1,99 @@
+@font-face {
+    font-family: 'MyFont';
+    src: url('/static/fonts/Retro.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+
+body{
+    margin: 0;
+    padding: 0;
+    font-family: 'MyFont', sans-serif;
+    background-color: #000000;
+    color:#dedeff ;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.blue{
+    color: aquamarine;
+    text-shadow:
+        0 0 8px #dedeff,
+        0 0 8px #0ff,
+        0 0 8px #4cb7d6;
+}
+
+.yellow{
+    color: #ffff00;
+    text-shadow:
+        0 0 8px #ffb751,
+        0 0 8px #ffff00,
+        0 0 8px #ffff00;
+}
+
+.title{
+    font-size: 5rem;
+    margin-bottom: 0.2rem;
+    color: #ffffff;
+    letter-spacing: 5px;
+    
+}
+
+.LobbyContainer{
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.LobbyTitle{
+    font-size: 1.6rem;
+    margin-bottom: 1rem;
+    color: #ffb751;
+}
+
+
+
+.LobbyList{
+    border: #dedeff 1px solid;
+    padding: 0.7rem;
+    display: flex;
+    flex-direction: column;
+    width: 60%;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.LobbyName{
+    color: #ffb7ff;
+}
+.LobbyItem{
+    padding: 0.8rem;
+    border: #dedeff 1px solid;
+    transition: background-color 0.3s ease;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+}
+
+
+.LobbyItem h2{
+    font-size: 0.9rem;
+}
+
+
+.LobbyItem button{
+    background-color: #000000;
+    color: #dedeff;
+    border: none;
+    font-family: 'MyFont', sans-serif;
+    padding: 0rem 0rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}

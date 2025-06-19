@@ -1,0 +1,95 @@
+.topbar{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    font-size: 1rem;
+    padding-top: 1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    letter-spacing: 2px;
+    margin-bottom: 4rem;
+}
+
+.MainContainer{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    width: 100%;
+    height: 70vh;
+}
+
+.PlayersContainer{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-evenly;
+    width: 20%;
+    height: 100%;
+    gap: 1rem ;
+}
+
+.PlayerItem{
+    display: flex;
+    flex-direction: column;
+    border: #dedeff 1px solid;
+    padding-right: 1rem;
+    padding-left: 1rem;
+    padding-top:0.5rem ;
+    padding-bottom: 0.5rem;
+    gap: 0.3rem;
+    align-items: center;
+}
+
+.PlayerTitle{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+.PlayerItem h2{
+    font-size: 0.8rem;
+}
+.PlayerItem h1{
+    font-size: 1.3rem;
+    color: #ffb751;
+}
+.PlayerTitle img{
+    width: 2rem;
+    height: 2rem;
+}
+
+.GameContainer{
+    height: 100%;
+    width: 60%;
+}
+
+#gameCanvas{
+    border: #dedeff 1px solid;
+
+}
+
+.SettingsContainer{
+    display: flex;
+    flex-direction: column;
+
+    padding: 1rem;
+    width: 60%;
+    height: 100%;
+    border: #dedeff 1px solid;
+}   
+
+.SettingsTitle{
+    font-size: 0.9rem;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 100% ;
+    color: #9797ae;
+    margin-bottom: 1rem;
+}
+
+
+
+
