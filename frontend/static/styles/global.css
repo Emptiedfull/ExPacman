@@ -20,8 +20,9 @@ body{
     color:#dedeff ;
     display: flex;
     flex-direction: column;
-    
 }
+    
+
 
 .blue{
     color: aquamarine;

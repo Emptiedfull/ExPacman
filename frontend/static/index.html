@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Web App</title>
-    <link rel="stylesheet" href="/static/styles/index.css">
-    <script src="/static/scripts/index.js" defer></script>
+    
+    <link rel="stylesheet" href="/static/styles/index.css?v=4">
+    <script src="/static/scripts/index.js?v=2" defer></script>
 </head>
 <body>
     <h1 class="title">
@@ -15,12 +16,27 @@
         Multiplayer Pacman
     </p>
 
-    <div class="LobbyContainer">
+    <div class="LobbyContainer" id="lobbyContainer" >
         <h1 class="LobbyTitle">
             Available Lobbies
         </h1>
         <div class="LobbyList" id="lobby-list">
         </div>
+        <div class="LobbyControls">
+            <button id="createLobby" class="createLobby retro-button">Create Lobby</button>
+            <button id="refreshLobby" class="refreshLobby retro-button">Refresh Lobbies</button>
+
+        </div>
     </div>
+    <div class="NameField" id="nameField" style="display: none;">
+        <h1>Enter Display Name</h1>
+                <div class="retro-input-container">
+        <input type="text" id="playerName" autocomplete="off" maxlength="6" style="opacity: 0;" />
+        <div id="retroInputOverlay" class="retro-input-overlay"></div>
+        </div>
+        <button id="enterGame" class="joinLobby ">Join Lobby</button>
+
+    </div>
+
 </body>
 </html>

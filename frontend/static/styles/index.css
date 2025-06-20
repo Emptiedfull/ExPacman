@@ -10,13 +10,24 @@ body{
     margin: 0;
     padding: 0;
     font-family: 'MyFont', sans-serif;
-    background-color: #000000;
+    background-color: #000000; 
     color:#dedeff ;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
 }
+
+body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: url('/static/images/bg.png') center center / cover no-repeat;
+    opacity: 0.12;
+    z-index: -1;
+    pointer-events: none;
+}
+
 
 .blue{
     color: aquamarine;
@@ -43,7 +54,7 @@ body{
 }
 
 .LobbyContainer{
-    margin-top: 2rem;
+    margin-top: 1rem;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -70,7 +81,7 @@ body{
 }
 
 .LobbyName{
-    color: #ffb7ff;
+    /* color: #ffb7ff; */
 }
 .LobbyItem{
     padding: 0.8rem;
@@ -79,6 +90,8 @@ body{
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    align-items: center;
+    
 
 }
 
@@ -97,3 +110,139 @@ body{
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
+
+.LobbyControls{
+    margin-top: 0.5rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 62%;
+    padding: 0.7rem;
+}
+
+.LobbyControls button {
+    
+    background-color: #000000;
+    color: #dedeff;
+    border: none;
+    font-family: 'MyFont', sans-serif;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    border: solid 1px #dedeff;
+}
+
+.retro-button {
+    font-family: 'MyFont', monospace;
+    font-size: 1rem;
+    color: #fffbe7;
+    background: #222;
+    border: 2px solid #ffb751;
+    border-radius: 0.3em;
+    box-shadow:
+        0 4px 0 #b97a00,   /* bottom shadow for depth */
+        0 12px 12px #0008;   /* soft drop shadow */
+    padding: 0.5em 2em;
+    cursor: pointer;
+    text-shadow: 0 2px 0 #b97a00, 0 0 3px #ffb751;
+    transition: all 0.1s;
+    outline: none;
+}
+
+.retro-button:active {
+    box-shadow:
+        0 2px 0 #b97a00,
+        0 2px 4px #0008;
+    transform: translateY(2px);
+    background: #1a1a1a;
+}
+
+.retro-button:focus {
+    outline: 2px solid #ffff00;
+}
+
+.NameField{
+    
+    display: flex;
+    flex-direction: column;
+    width: 40%;
+    margin-top: 3rem;
+    padding: 1rem;
+    align-items: center;
+    border: solid 1px #dedeff   ;
+}
+
+.NameField h1{
+    font-size: 1.4rem;
+    color: #ffb751;
+    margin-bottom: 1rem;
+}
+
+.NameField input{
+    width: 60%;
+    padding: 0.5rem;
+    border: solid 1px #dedeff;
+    border-radius: 5px;
+    background-color: #000000;
+    color: #dedeff;
+    font-family: 'MyFont', sans-serif;
+}
+
+.NameField button{
+    background-color: #000000;
+    color: #dedeff;
+    border: none;
+    font-family: 'MyFont', sans-serif;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    border: solid 1px #dedeff;
+}
+
+.NameField button:disabled {
+    background-color: #333333;
+    color: #666666;
+    cursor: not-allowed;
+}
+
+.retro-input-container {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 1rem;
+}
+
+#playerName {
+    background: transparent;
+    color: #dedeff;
+    font-family: 'MyFont', monospace;
+    font-size: 1.2rem;
+    border: none;
+    outline: none;
+    caret-color: transparent; /* Hide default caret */
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+}
+
+.retro-input-overlay {
+    font-family: 'MyFont', monospace;
+    font-size: 1.2rem;
+    color: #dedeff;
+    background: transparent;
+    pointer-events: none;
+    white-space: pre;
+    min-height: 1.5em;
+    position: relative;
+}
+
+.blink-cursor {
+    animation: blink 1s steps(1) infinite;
+    color: #ffff00;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+

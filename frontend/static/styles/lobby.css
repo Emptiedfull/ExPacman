@@ -16,6 +16,7 @@
     display: flex;
     flex-direction: row;
     justify-content: center;
+    gap: 1rem;
     width: 100%;
     height: 70vh;
 }
@@ -33,7 +34,8 @@
 .PlayerItem{
     display: flex;
     flex-direction: column;
-    border: #dedeff 1px solid;
+    border: #dedeff 2px solid;
+    width: 80%;
     padding-right: 1rem;
     padding-left: 1rem;
     padding-top:0.5rem ;
@@ -78,6 +80,22 @@
     height: 100%;
     border: #dedeff 1px solid;
 }   
+
+.GuestMode{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
+.HostMode{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+}
 
 .SettingsTitle{
     font-size: 0.9rem;

@@ -92,36 +92,37 @@ func newBoard(width, height int) *Board {
 
 }
 
-func (b Board) visualize() string {
-	var Output string
+func (b Board) visualize() []string {
+	var Output []string
 	for _, row := range b.Cells {
+		var OutputRow string
 		for _, cell := range row {
 			var temp string
 			switch cell.background {
 			case wall:
-				temp = "W "
+				temp = "#"
 			case food:
-				temp = ". "
+				temp = "."
 			case empty:
-				temp = "  "
+				temp = " "
 			}
 			switch cell.enemy {
 			case enemyA:
-				temp = "a "
+				temp = "a"
 			case enemyB:
-				temp = "b "
+				temp = "b"
 			case enemyC:
-				temp = "c "
+				temp = "c"
 			case enemyD:
-				temp = "d "
+				temp = "d"
 			}
 			if cell.pacman {
-				temp = "P "
+				temp = "P"
 			}
-			Output += temp
+			OutputRow += temp
 
 		}
-		Output += "\n"
+		Output = append(Output, OutputRow)
 	}
 	return Output
 }
@@ -322,7 +323,7 @@ func InitializeGameState() *GameState {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &GameState{
 		Board:           board,
-		MoveState:       [5]move{None, None, None, None, None},
+		MoveState:       [5]move{Right, None, None, None, None},
 		Scores:          [5]int{0, 200, 200, 200, 200},
 		PlayerPositions: positions,
 		mut:             sync.Mutex{},

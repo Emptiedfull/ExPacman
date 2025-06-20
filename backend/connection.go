@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -127,6 +128,7 @@ func broadcast(Lobby *Lobby) {
 				err := user.socket.WriteMessage(websocket.TextMessage, msg)
 				if err != nil {
 					fmt.Println("WriteJSON error:", err)
+					delete(Lobby.Users, user.ID)
 				}
 			}
 		}
@@ -144,17 +146,63 @@ func addUser(lobby *Lobby, conn *websocket.Conn, name string) {
 		lobby.host = user
 		user.Host = true
 
+		HostUpdate := HostUpdate{
+			Type: "HostUpdate",
+			ID:   lobby.ID,
+		}
+
+		jsonBytes, err := json.Marshal(HostUpdate)
+		if err != nil {
+			fmt.Println("Marshal error:", err)
+
+		}
+
+		user.socket.WriteMessage(websocket.TextMessage, jsonBytes)
 	}
 
 	err := listenForMessages(conn, user, lobby)
 	if err {
+		fmt.Println("Error listening for messages, user will be removed")
 		delete(lobby.Users, user.ID)
 		if len(lobby.Users) == 0 {
 			Lobbies[lobby.ID] = nil
 			delete(Lobbies, lobby.ID)
 		} else {
 			lobby.host = randHost(lobby.Users)
+			lobby.host.Host = true
+			HostUpdate := HostUpdate{
+				Type: "HostUpdate",
+				ID:   lobby.ID,
+			}
+			jsonBytes, err := json.Marshal(HostUpdate)
+			if err != nil {
+				fmt.Println("Error Marshaling,177")
+			} else {
+				lobby.host.socket.WriteMessage(websocket.TextMessage, jsonBytes)
+			}
+
 			fmt.Printf("New host for lobby %s is %s\n", lobby.ID, lobby.host.Name)
+		}
+
+		userInfoUpdate := UserInfoUpdate{
+			Type:  "UserInfoUpdate",
+			ID:    lobby.ID,
+			Users: make([]UserInfo, 0, len(lobby.Users)),
+		}
+		for _, u := range lobby.Users {
+			userInfoUpdate.Users = append(userInfoUpdate.Users, UserInfo{
+				ID:     u.ID,
+				Name:   u.Name,
+				Pacman: u.pacman,
+				Enemy:  u.Enemy,
+				Host:   u.Host,
+			})
+		}
+		jsonbytes, err := json.Marshal(userInfoUpdate)
+		if err != nil {
+			fmt.Println("Error Marshaling,201", err)
+		} else {
+			lobby.broadcast <- jsonbytes
 		}
 
 	}
@@ -187,6 +235,7 @@ func enableCORS(next http.Handler) http.Handler {
 func setUpServer() {
 	http.Handle("/lobbies", enableCORS(http.HandlerFunc(getLobbies)))
 	http.Handle("/ws/", enableCORS(http.HandlerFunc(wsHandler)))
+	http.Handle("/create", enableCORS(http.HandlerFunc(makeLobby)))
 	fmt.Println("WebSocket server started n :8080")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		fmt.Println("ListenAndServe error:", err)
