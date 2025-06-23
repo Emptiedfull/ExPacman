@@ -20,9 +20,9 @@ var boardString = []string{
 	"######.##### ## #####.######",
 	"######.##          ##.######",
 	"######.## ###  ### ##.######",
-	"######.## #  b   # ##.######",
-	" p     ##   c  d   ##       ",
-	"######.## #   a  # ##.######",
+	"######.## #      # ##.######",
+	" p     ##          ##       ",
+	"######.## #      # ##.######",
 	"######.## ###  ### ##.######",
 	"######.##          ##.######",
 	"######.## ######## ##.######",
@@ -41,6 +41,22 @@ var boardString = []string{
 }
 
 type Enemy int
+
+type EnemyLocations struct {
+	EnemyA [2]int
+	EnemyB [2]int
+	EnemyC [2]int
+	EnemyD [2]int
+}
+
+var enemyLoc = EnemyLocations{
+	EnemyA: [2]int{15, 14},
+	EnemyB: [2]int{14, 12},
+	EnemyC: [2]int{14, 15},
+	EnemyD: [2]int{12, 12},
+}
+
+var EnemyLocArr = [4][2]int{{15, 14}, {14, 12}, {14, 15}, {12, 12}}
 
 const (
 	NoPlayer Enemy = iota
@@ -127,9 +143,9 @@ func (b Board) visualize() []string {
 	return Output
 }
 
-func ParseBoardString(boardString []string) (*Board, [5][2]int) {
+func ParseBoardString(boardString []string, Users int) (*Board, [][2]int) {
 	board := newBoard(len(boardString[0]), len(boardString))
-	var Positions [5][2]int
+	Positions := make([][2]int, Users)
 	for i, row := range boardString {
 		for j, char := range row {
 			switch char {
@@ -140,21 +156,29 @@ func ParseBoardString(boardString []string) (*Board, [5][2]int) {
 			case 'p':
 				Positions[0] = [2]int{i, j}
 				board.Cells[i][j].pacman = true
-			case 'a':
-				Positions[1] = [2]int{i, j}
-				board.Cells[i][j].enemy = enemyA
-			case 'b':
-				Positions[2] = [2]int{i, j}
-				board.Cells[i][j].enemy = enemyB
-			case 'c':
-				Positions[3] = [2]int{i, j}
-				board.Cells[i][j].enemy = enemyC
-			case 'd':
-				Positions[4] = [2]int{i, j}
-				board.Cells[i][j].enemy = enemyD
+				// case 'a':
+				// 	Positions[1] = [2]int{i, j}
+				// 	board.Cells[i][j].enemy = enemyA
+				// case 'b':
+				// 	Positions[2] = [2]int{i, j}
+				// 	board.Cells[i][j].enemy = enemyB
+				// case 'c':
+				// 	Positions[3] = [2]int{i, j}
+				// 	board.Cells[i][j].enemy = enemyC
+				// case 'd':
+				// 	Positions[4] = [2]int{i, j}
+				// 	board.Cells[i][j].enemy = enemyD
 			}
 		}
 	}
+
+	for i := 1; i < Users; i++ {
+		enemy := Enemy(i)
+		Positions[i] = EnemyLocArr[i-1]
+		fmt.Println("Enemy", i, "at position", Positions[i])
+		board.Cells[Positions[i][0]][Positions[i][1]].enemy = enemy
+	}
+
 	return board, Positions
 
 }
@@ -171,8 +195,8 @@ const (
 
 type GameState struct {
 	Board           *Board
-	MoveState       [5]move
-	PlayerPositions [5][2]int
+	MoveState       []move
+	PlayerPositions [][2]int
 	Scores          [5]int
 	mut             sync.Mutex
 	ctx             context.Context
@@ -318,12 +342,13 @@ func (g *GameState) move() {
 	}
 }
 
-func InitializeGameState() *GameState {
-	board, positions := ParseBoardString(boardString)
+func InitializeGameState(Users int) *GameState {
+	board, positions := ParseBoardString(boardString, Users)
+	fmt.Println(positions)
 	ctx, cancel := context.WithCancel(context.Background())
 	return &GameState{
 		Board:           board,
-		MoveState:       [5]move{Right, None, None, None, None},
+		MoveState:       make([]move, Users),
 		Scores:          [5]int{0, 200, 200, 200, 200},
 		PlayerPositions: positions,
 		mut:             sync.Mutex{},

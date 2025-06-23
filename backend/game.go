@@ -43,12 +43,12 @@ type UserInfo struct {
 }
 
 type BoardUpdate struct {
-	Type   string         `json:"type"`
-	ID     string         `json:"id"`
-	Board  []string       `json:"board"`
-	Scores [5]int         `json:"scores"`
-	Pacman PacmanUpdate   `json:"pacman"`
-	Ghost  []PacmanUpdate `json:"enemy"`
+	Type   string        `json:"type"`
+	ID     string        `json:"id"`
+	Board  []string      `json:"board"`
+	Scores [5]int        `json:"scores"`
+	Pacman PacmanUpdate  `json:"pacman"`
+	Ghost  []GhostUpdate `json:"enemy"`
 }
 
 type GhostUpdate struct {
@@ -130,8 +130,6 @@ func listenForMessages(conn *websocket.Conn, user *User, lobby *Lobby) (err bool
 			return true
 		}
 
-		fmt.Println("Received message:", msg)
-
 		if msg.Type == "MoveState" {
 			fmt.Println("Received MoveState message:", msg)
 			if lobby.GameState == nil {
@@ -158,12 +156,11 @@ func listenForMessages(conn *websocket.Conn, user *User, lobby *Lobby) (err bool
 
 			if user.pacman {
 				lobby.GameState.MoveState[0] = move(msg.Direction)
-				fmt.Println("Pacman moved to direction:", msg.Direction)
 			}
 
 			x := int(user.Enemy)
-			if x <= 4 {
-				lobby.GameState.MoveState[x+1] = move(msg.Direction)
+			if x <= 4 || x != 0 {
+				lobby.GameState.MoveState[x] = move(msg.Direction)
 			}
 
 		}
@@ -189,7 +186,7 @@ func listenForMessages(conn *websocket.Conn, user *User, lobby *Lobby) (err bool
 
 			}
 
-			lobby.GameState = InitializeGameState()
+			lobby.GameState = InitializeGameState(len(lobby.Users))
 			lobby.AssignRoles()
 
 			go lobby.GameState.startGame(lobby)
@@ -209,8 +206,13 @@ func (Lobby *Lobby) AssignRoles() {
 		if v != pacman {
 			v.pacman = false
 			v.Enemy = Enemy(i)
+			i++
 		}
-		i++
+
+	}
+
+	for _, u := range Lobby.Users {
+		fmt.Println("User:", u.Name, "Pacman:", u.pacman, "Enemy:", u.Enemy)
 	}
 
 	startAlert := StartAlert{
@@ -296,8 +298,10 @@ func (Lobby *Lobby) generateStartAlert() StartAlert {
 }
 
 func (g *GameState) startGame(Lobby *Lobby) (result bool) {
+
+	fmt.Println(Lobby.GameState.PlayerPositions)
 	// ticker := time.NewTicker(1 * time.Second)
-	ticker := time.NewTicker(500 * time.Millisecond) // 10 ticks per second
+	ticker := time.NewTicker(250 * time.Millisecond) // 10 ticks per second
 	defer ticker.Stop()
 
 	for {
@@ -317,7 +321,15 @@ func (g *GameState) startGame(Lobby *Lobby) (result bool) {
 					TargetY: g.PlayerPositions[0][1],
 					Dir:     int(g.MoveState[0]),
 				},
-				Ghost: make([]PacmanUpdate, 0),
+				Ghost: make([]GhostUpdate, 0),
+			}
+			for i, pos := range g.PlayerPositions[1:] {
+				BoardUpdate.Ghost = append(BoardUpdate.Ghost, GhostUpdate{
+					TargetX: pos[0],
+					TargetY: pos[1],
+					Dir:     int(g.MoveState[i+1]),
+					Name:    int(i + 1),
+				})
 			}
 
 			jsonBytes, err := json.Marshal(BoardUpdate)
