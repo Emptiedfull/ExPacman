@@ -86,12 +86,14 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type User struct {
-	ID     string
-	Name   string
-	socket *websocket.Conn
-	Host   bool
-	pacman bool
-	Enemy  Enemy
+	ID        string
+	Name      string
+	socket    *websocket.Conn
+	Host      bool
+	pacman    bool
+	Enemy     Enemy
+	Score     int
+	PoweredUp bool
 }
 
 type Lobby struct {
@@ -120,6 +122,25 @@ func createLobby() *Lobby {
 	return lobby
 }
 
+func sendUserInfoUpdate(U UserInfoUpdate, lobby *Lobby) {
+	for _, user := range lobby.Users {
+		for i, u := range U.Users {
+			if user.ID == u.ID {
+				U.Users[i].You = true
+				fmt.Println("sending userinfo Update, U")
+				jsonbytes, err := json.Marshal(U)
+				if err != nil {
+					fmt.Println("eror marshaling 131", err)
+				} else {
+					user.socket.WriteMessage(websocket.TextMessage, jsonbytes)
+				}
+				U.Users[i].You = false
+			}
+		}
+	}
+
+}
+
 func broadcast(Lobby *Lobby) {
 	for {
 		msg := <-Lobby.broadcast
@@ -140,6 +161,7 @@ func addUser(lobby *Lobby, conn *websocket.Conn, name string) {
 		ID:     strconv.Itoa(randID()),
 		Name:   name,
 		socket: conn,
+		Score:  0,
 	}
 	lobby.Users[user.ID] = user
 	if lobby.host == nil {

@@ -9,10 +9,16 @@ import (
 )
 
 type UserMessage struct {
-	Type      string `json:"type"`
-	UserID    string `json:"id"`
-	Content   string `json:"content"`
-	Direction int    `json:"direction"`
+	Type        string      `json:"type"`
+	UserID      string      `json:"id"`
+	Content     string      `json:"content"`
+	Direction   int         `json:"direction"`
+	GameOptions GameOptions `json:"options"`
+}
+
+type GameOptions struct {
+	Timeout   int `json:"duration"`
+	GameSpeed int `json:"game_speed"`
 }
 
 type UserAlert struct {
@@ -20,6 +26,11 @@ type UserAlert struct {
 	ID      string `json:"id"`
 	Message string `json:"name"`
 }
+type PowerUpAlert struct {
+	Type   string `json:"type`
+	status bool   `json:"status"`
+}
+
 type StartAlert struct {
 	Type   string        `json:"type"`
 	ID     string        `json:"id"`
@@ -40,13 +51,14 @@ type UserInfo struct {
 	Pacman bool   `json:"pacman"`
 	Enemy  Enemy  `json:"enemy"`
 	Host   bool   `json:"host"`
+	You    bool   `json:"you"`
 }
 
 type BoardUpdate struct {
 	Type   string        `json:"type"`
 	ID     string        `json:"id"`
 	Board  []string      `json:"board"`
-	Scores [5]int        `json:"scores"`
+	Scores []int         `json:"scores"`
 	Pacman PacmanUpdate  `json:"pacman"`
 	Ghost  []GhostUpdate `json:"enemy"`
 }
@@ -94,13 +106,13 @@ func listenForMessages(conn *websocket.Conn, user *User, lobby *Lobby) (err bool
 		Sender:  "Server",
 	}
 
-	UserInfoUpdate := UserInfoUpdate{
+	userInfoUpdate := UserInfoUpdate{
 		Type:  "UserInfoUpdate",
 		ID:    lobby.ID,
 		Users: make([]UserInfo, 0, len(lobby.Users)),
 	}
 	for _, u := range lobby.Users {
-		UserInfoUpdate.Users = append(UserInfoUpdate.Users, UserInfo{
+		userInfoUpdate.Users = append(userInfoUpdate.Users, UserInfo{
 			ID:     u.ID,
 			Name:   u.Name,
 			Pacman: u.pacman,
@@ -109,12 +121,14 @@ func listenForMessages(conn *websocket.Conn, user *User, lobby *Lobby) (err bool
 		})
 	}
 
-	jsonbyytes, error := json.Marshal(UserInfoUpdate)
-	if error != nil {
-		fmt.Println("Marshal error:", err)
+	sendUserInfoUpdate(userInfoUpdate, lobby)
 
-	}
-	lobby.broadcast <- jsonbyytes
+	// jsonbyytes, error := json.Marshal(userInfoUpdate)
+	// if error != nil {
+	// 	fmt.Println("Marshal error:", err)
+
+	// }
+	// lobby.broadcast <- jsonbyytes
 
 	jsonBytes, error := json.Marshal(GenMessage)
 	if error != nil {
@@ -131,7 +145,6 @@ func listenForMessages(conn *websocket.Conn, user *User, lobby *Lobby) (err bool
 		}
 
 		if msg.Type == "MoveState" {
-			fmt.Println("Received MoveState message:", msg)
 			if lobby.GameState == nil {
 				fmt.Println("Game has not started yet")
 				user.socket.WriteMessage(websocket.TextMessage, []byte("Game has not started yet"))
@@ -189,7 +202,41 @@ func listenForMessages(conn *websocket.Conn, user *User, lobby *Lobby) (err bool
 			lobby.GameState = InitializeGameState(len(lobby.Users))
 			lobby.AssignRoles()
 
-			go lobby.GameState.startGame(lobby)
+			userInfoUpdate := UserInfoUpdate{
+				Type:  "UserInfoUpdate",
+				ID:    lobby.ID,
+				Users: make([]UserInfo, 0, len(lobby.Users)),
+			}
+
+			for _, u := range lobby.Users {
+				userInfoUpdate.Users = append(userInfoUpdate.Users, UserInfo{
+					ID:     u.ID,
+					Name:   u.Name,
+					Pacman: u.pacman,
+					Enemy:  u.Enemy,
+					Host:   u.Host,
+				})
+			}
+
+			sendUserInfoUpdate(userInfoUpdate, lobby)
+
+			// jsonbytes, err := json.Marshal(userInfoUpdate)
+			// if err != nil {
+			// 	fmt.Println("Error marshaling user info update:", err)
+			// // }
+
+			// fmt.Println(msg)
+
+			// lobby.broadcast <- jsonbytes
+
+			if msg.GameOptions.GameSpeed == 0 {
+				msg.GameOptions.GameSpeed = 250
+			}
+			if msg.GameOptions.Timeout == 0 {
+				msg.GameOptions.Timeout = 10
+			}
+
+			go lobby.GameState.startGame(lobby, msg.GameOptions)
 		}
 
 	}
@@ -201,11 +248,13 @@ func listenForMessages(conn *websocket.Conn, user *User, lobby *Lobby) (err bool
 func (Lobby *Lobby) AssignRoles() {
 	pacman := randHost(Lobby.Users)
 	pacman.pacman = true
+	pacman.Score = 0
 	i := 1
 	for _, v := range Lobby.Users {
 		if v != pacman {
 			v.pacman = false
 			v.Enemy = Enemy(i)
+			v.Score = 200
 			i++
 		}
 
@@ -269,45 +318,138 @@ func (Lobby *Lobby) AssignRoles() {
 
 }
 
-func (alert StartAlert) toJSON() []byte {
-	jsonBytes, err := json.Marshal(alert)
+// func (alert StartAlert) toJSON() []byte {
+// 	jsonBytes, err := json.Marshal(alert)
+// 	if err != nil {
+// 		fmt.Println("Marshal error:", err)
+// 		return nil
+// 	}
+// 	return jsonBytes
+// }
+
+// func (Lobby *Lobby) generateStartAlert() StartAlert {
+// 	users := make([]UserInfo, 0, len(Lobby.Users))
+// 	for _, user := range Lobby.Users {
+// 		users = append(users, UserInfo{
+// 			ID:     user.ID,
+// 			Name:   user.Name,
+// 			Pacman: user.pacman,
+// 			Enemy:  user.Enemy,
+// 			Host:   user.Host,
+// 		})
+// 	}
+// 	return StartAlert{
+// 		Type:  "StartAlert",
+// 		ID:    Lobby.ID,
+// 		Role:  "Pacman",
+// 		Users: users,
+// 	}
+// }
+
+type GameEndMessage struct {
+	Type   string         `json:"type"`
+	Winner string         `json:"winner"`
+	Scores map[string]int `json:"scores"`
+}
+
+func (l *Lobby) handleGameEnd() {
+	scores := make(map[string]int)
+
+	pacmanScore := 0
+	ghostScore := 0
+
+	for _, user := range l.Users {
+		scores[user.Name] = user.Score
+		if user.pacman {
+			pacmanScore = user.Score
+		} else {
+			ghostScore += user.Score
+		}
+	}
+
+	gameEndMessage := GameEndMessage{
+		Type:   "GameEnd",
+		Scores: scores,
+	}
+
+	var ghostmean int
+	if ghostScore != 0 {
+		ghostmean = ghostScore / (len(l.Users) - 1)
+	} else {
+		ghostmean = 0
+	}
+
+	if pacmanScore > ghostmean {
+		gameEndMessage.Winner = "pacman"
+	} else {
+		gameEndMessage.Winner = "ghosts"
+	}
+
+	jsonBytes, err := json.Marshal(gameEndMessage)
 	if err != nil {
-		fmt.Println("Marshal error:", err)
-		return nil
+		fmt.Println("Error marshaling game end message:", err)
+		return
 	}
-	return jsonBytes
+
+	l.broadcast <- jsonBytes
+	fmt.Println("Game ended, winner:")
+	Lobbies[l.ID] = nil
+	delete(Lobbies, l.ID)
 }
 
-func (Lobby *Lobby) generateStartAlert() StartAlert {
-	users := make([]UserInfo, 0, len(Lobby.Users))
-	for _, user := range Lobby.Users {
-		users = append(users, UserInfo{
-			ID:     user.ID,
-			Name:   user.Name,
-			Pacman: user.pacman,
-			Enemy:  user.Enemy,
-			Host:   user.Host,
-		})
-	}
-	return StartAlert{
-		Type:  "StartAlert",
-		ID:    Lobby.ID,
-		Role:  "Pacman",
-		Users: users,
-	}
-}
-
-func (g *GameState) startGame(Lobby *Lobby) (result bool) {
+func (g *GameState) startGame(Lobby *Lobby, options GameOptions) (result bool) {
 
 	fmt.Println(Lobby.GameState.PlayerPositions)
-	// ticker := time.NewTicker(1 * time.Second)
-	ticker := time.NewTicker(250 * time.Millisecond) // 10 ticks per second
+
+	gameOverTicker := time.NewTicker(time.Duration(options.Timeout) * time.Second)
+	defer gameOverTicker.Stop()
+	ticker := time.NewTicker(time.Duration(options.GameSpeed) * time.Millisecond)
 	defer ticker.Stop()
+
+	var PowerUpTicker *time.Ticker
+	powerUpChan := make(chan []int)
 
 	for {
 		select {
+		case <-gameOverTicker.C:
+			defer Lobby.handleGameEnd()
+			return true
+
+		case <-PowerUpTicker.C:
+			PowerUpTicker.Stop()
+			PowerUpTicker = nil
+			powerUpAlert := &PowerUpAlert{
+				Type:   "powerUp",
+				status: false,
+			}
+			jsonbytes, err := json.Marshal(powerUpAlert)
+			if err != nil {
+				fmt.Println("error marshaling 427", err)
+			} else {
+				Lobby.broadcast <- jsonbytes
+			}
+
+		case <-powerUpChan:
+			if PowerUpTicker == nil {
+				powerUpAlert := &PowerUpAlert{
+					Type:   "powerUp",
+					status: true,
+				}
+				jsonbytes, err := json.Marshal(powerUpAlert)
+				if err != nil {
+					fmt.Println("marshalingerr 425", err)
+				} else {
+					Lobby.broadcast <- jsonbytes
+				}
+
+				PowerUpTicker = time.NewTicker(time.Duration(options.Timeout) / 8 * time.Second)
+			} else {
+				PowerUpTicker.Stop()
+				PowerUpTicker = time.NewTicker(time.Duration(options.Timeout) / 8 * time.Second)
+			}
+
 		case <-ticker.C:
-			if g.gametick() {
+			if g.gametick(Lobby) {
 				return true
 			}
 
@@ -315,7 +457,7 @@ func (g *GameState) startGame(Lobby *Lobby) (result bool) {
 				Type:   "BoardUpdate",
 				ID:     Lobby.ID,
 				Board:  g.Board.visualize(),
-				Scores: g.Scores,
+				Scores: make([]int, len(Lobby.Users)),
 				Pacman: PacmanUpdate{
 					TargetX: g.PlayerPositions[0][0],
 					TargetY: g.PlayerPositions[0][1],
@@ -323,6 +465,14 @@ func (g *GameState) startGame(Lobby *Lobby) (result bool) {
 				},
 				Ghost: make([]GhostUpdate, 0),
 			}
+			for _, user := range Lobby.Users {
+				if user.pacman {
+					BoardUpdate.Scores[0] = user.Score
+				} else {
+					BoardUpdate.Scores[int(user.Enemy)] = user.Score
+				}
+			}
+
 			for i, pos := range g.PlayerPositions[1:] {
 				BoardUpdate.Ghost = append(BoardUpdate.Ghost, GhostUpdate{
 					TargetX: pos[0],

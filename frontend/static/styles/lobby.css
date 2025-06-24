@@ -11,6 +11,17 @@
     letter-spacing: 2px;
     margin-bottom: 4rem;
 }
+button.disabled {
+    background: #222 !important;
+    color: #888 !important;
+    border: 1px dashed #888 !important;
+    opacity: 0.6 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    filter: grayscale(60%) !important;
+    cursor:not-allowed !important;
+}
+
 
 .MainContainer{
     display: flex;
@@ -18,7 +29,53 @@
     justify-content: center;
     gap: 1rem;
     width: 100%;
+    padding-left: 2rem;
+    padding-right: 2rem;
     height: 70vh;
+}
+
+.Information{
+    padding: 0.8rem;
+    border: #dedeff 1px solid   ;
+    display: flex;
+    flex-direction: column;
+    width: 30%;
+    align-items: center;
+
+}
+
+.InformationTitle{
+    font-size: 1.5rem;
+    color:#ffb751;
+    text-align: center;
+}
+
+.InformationContent{
+    margin-top: 2rem;
+    font-size: 0.6rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    height: 100%;
+    gap: 1rem;
+}
+
+.InfortationItem{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding-right: 1rem;
+}
+
+.InfortationItem h2{
+    font-size: 0.9rem;
+    margin-bottom: 0.4rem;
+    color: #9797ae;
+}
+
+.InfortationItem p{
+    font-size: 0.6rem;
+    text-align: justify;
 }
 
 .PlayersContainer{
@@ -35,7 +92,7 @@
     display: flex;
     flex-direction: column;
     border: #dedeff 2px solid;
-    width: 80%;
+    width: 100%;
     padding-right: 1rem;
     padding-left: 1rem;
     padding-top:0.5rem ;
@@ -57,13 +114,13 @@
     color: #ffb751;
 }
 .PlayerTitle img{
-    width: 2rem;
-    height: 2rem;
+    width: 1.2rem;
+    height: 1.2rem;
+    margin-left: 0.5rem;
 }
 
 .GameContainer{
     height: 100%;
-    width: 60%;
 }
 
 #gameCanvas{
@@ -74,12 +131,40 @@
 .SettingsContainer{
     display: flex;
     flex-direction: column;
-
+       text-shadow: 0 0 4px #fffbe7;
     padding: 1rem;
-    width: 60%;
+    width: 50%;
     height: 100%;
     border: #dedeff 1px solid;
 }   
+
+.SettingsMain{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-top: 1rem;
+    font-size: 0.8rem;
+    gap:1rem
+}
+
+.sliderContainer{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+.sliderValueContainer{
+    width: 35%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+.slider{
+    -webkit-appearance: none;
+    appearance: none;
+    width: 70%;
+}
 
 .GuestMode{
     display: flex;
@@ -88,6 +173,7 @@
     height: 100%;
     align-items: center;
     justify-content: center;
+    text-align: center;
 }
 
 .HostMode{
@@ -108,6 +194,223 @@
     margin-bottom: 1rem;
 }
 
+Body{
+    position: relative;
+}
+
+.GameOverOverlay{
+    position: absolute;
+    top: 15%;
+    left: 25%;
+    width: 50%;
+    height: 80%;
+    z-index: 100;
+    background-color: rgba(0, 0, 0, 0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding:1rem;
+    border: 1px solid #dedeff;
+}
+
+.GameOverTitle{
+    font-size: 2.5rem;
+    color: #ffb751;
+    margin-bottom: 2rem;
+}
+
+.GameOverContent{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    align-items: center;
+    height: 100%;
+}
+
+.GameOverHeader{
+    display: flex;
+    font-size: 0.8rem;
+    width: 100% ;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.Scores{
+    width: 60%;
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+}
+
+.ScoreItem{
+    flex-direction: row;
+    justify-content: space-between;
+    display: flex;
+    padding: 0.5rem;
+    font-size: 0.8rem;
+}
+
+.playerSprite{
+    width: 1rem;
+    height: 1rem;
+    margin-right: 0.5rem;
+}
+
+.LobbyButton{
+    border: 1px solid #dedeff;
+    color: #dedeff;
+     font-family: 'MyFont', sans-serif;
+     font-size: 1rem;
+    padding: 0.8rem;
+    margin-bottom: 1rem;
+    margin-top: auto;
+    background-color: transparent;
+    cursor: pointer;
+}
+
+.StartButtonContainer{
+    margin-top:auto ;
+    display: flex;
+    flex-direction: column-reverse ;
+    align-items: center;
+    gap: 0.5rem;
+    
+
+}
+
+.LobbyId{
+    font-size: 0.8rem;
+}
+
+.StartButtonContainer button{
+    width: 35%;
+    height: 100%;
+    font-family: 'MyFont', sans-serif;
+    font-size: 1rem;
+    padding: 0.7rem;
+    color: #dedeff;
+    border: 1px solid #dedeff;
+    background-color: transparent;
+    cursor: pointer;
+}
+
+
+.retro-overlay {
+    pointer-events: none;
+    position: fixed;
+    z-index: 9999;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background:
+        repeating-linear-gradient(
+            to bottom,
+            rgba(255,255,255,0.03) 0px,
+            rgba(255,255,255,0.03) 1px,
+            transparent 3px,
+            transparent 8px
+        ),
+        radial-gradient(ellipse at center, rgba(0,40,255,0.08) 0%, rgba(0,0,0,0.18) 100%);
+    animation: scanmove 1s linear infinite;
+    mix-blend-mode: lighten;
+}
+
+.You{
+    box-shadow: 0 0 10px rgba(255, 183, 81, 0.8),0 0 10px rgba(255, 183, 81, 0.8),0 0 10px rgba(255, 183, 81, 0.8);
+}
 
 
 
+@keyframes scanmove {
+    0% { background-position-y: 0; }
+    100% { background-position-y: 10px; }
+}
+
+/* Retro slider track */
+.slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 65%;
+    height: 12px;
+    background: transparent;
+    border: 3px solid #9797ae;
+    border-radius: 6px;
+    /* box-shadow: 0 0 8px #ffb75188, 0 2px 0 #b97a00; */
+    outline: none;
+    margin: 0 0.5em;
+}
+
+/* Retro slider thumb */
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #9797ae;
+    border: 1px solid #9797ae;
+    border-radius: 16px;
+    /* box-shadow: 0 0 8px #ffb751, 0 2px 0 #b97a00; */
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+
+
+.slider::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    background: #ffb751;
+    border: 3px solid #fffbe7;
+    border-radius: 4px;
+    box-shadow: 0 0 8px #ffb751, 0 2px 0 #b97a00;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.slider:focus::-moz-range-thumb {
+    background: #fffbe7;
+    border-color: #ffb751;
+}
+
+.slider::-moz-range-track {
+    height: 12px;
+    background: #222;
+    border: 3px solid #ffb751;
+    border-radius: 6px;
+    box-shadow: 0 0 8px #ffb75188, 0 2px 0 #b97a00;
+}
+
+.slider:focus {
+    outline: none;
+}
+
+
+.slider::-ms-thumb {
+    width: 24px;
+    height: 24px;
+    background: #ffb751;
+    border: 3px solid #fffbe7;
+    border-radius: 4px;
+    box-shadow: 0 0 8px #ffb751, 0 2px 0 #b97a00;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.slider::-ms-fill-lower,
+.slider::-ms-fill-upper {
+    background: #222;
+    border: 3px solid #ffb751;
+    border-radius: 6px;
+    box-shadow: 0 0 8px #ffb75188, 0 2px 0 #b97a00;
+}
+
+
+.slider:focus {
+    outline: none;
+}
+
+.sliderValue {
+    font-family: 'MyFont', monospace;
+    text-shadow: 0 0 4px #fffbe7;
+    font-size: 1.1em;
+    margin-left: 0.5em;
+}

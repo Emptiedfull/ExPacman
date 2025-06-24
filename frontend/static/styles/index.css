@@ -18,7 +18,7 @@ body{
     justify-content: center;
 }
 
-body::before {
+/* body::before {
     content: "";
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -26,6 +26,29 @@ body::before {
     opacity: 0.12;
     z-index: -1;
     pointer-events: none;
+} */
+
+.retro-overlay {
+    pointer-events: none;
+    position: fixed;
+    z-index: 9999;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background:
+        repeating-linear-gradient(
+            to bottom,
+            rgba(255,255,255,0.03) 0px,
+            rgba(255,255,255,0.03) 1px,
+            transparent 3px,
+            transparent 8px
+        ),
+        radial-gradient(ellipse at center, rgba(0,40,255,0.08) 0%, rgba(0,0,0,0.18) 100%);
+    animation: scanmove 1s linear infinite;
+    mix-blend-mode: lighten;
+}
+
+@keyframes scanmove {
+    0% { background-position-y: 0; }
+    100% { background-position-y: 10px; }
 }
 
 

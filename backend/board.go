@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"sync"
 )
 
@@ -49,13 +50,6 @@ type EnemyLocations struct {
 	EnemyD [2]int
 }
 
-var enemyLoc = EnemyLocations{
-	EnemyA: [2]int{15, 14},
-	EnemyB: [2]int{14, 12},
-	EnemyC: [2]int{14, 15},
-	EnemyD: [2]int{12, 12},
-}
-
 var EnemyLocArr = [4][2]int{{15, 14}, {14, 12}, {14, 15}, {12, 12}}
 
 const (
@@ -72,6 +66,7 @@ const (
 	empty background = iota
 	wall
 	food
+	powerup
 )
 
 type Cell struct {
@@ -121,7 +116,10 @@ func (b Board) visualize() []string {
 				temp = "."
 			case empty:
 				temp = " "
+			case powerup:
+				temp = "0"
 			}
+
 			switch cell.enemy {
 			case enemyA:
 				temp = "a"
@@ -143,9 +141,10 @@ func (b Board) visualize() []string {
 	return Output
 }
 
-func ParseBoardString(boardString []string, Users int) (*Board, [][2]int) {
+func ParseBoardString(boardString []string, Users int) (Board *Board, playerPositions [][2]int, emptyCells [][2]int) {
 	board := newBoard(len(boardString[0]), len(boardString))
 	Positions := make([][2]int, Users)
+	EmptyCells := make([][2]int, 0)
 	for i, row := range boardString {
 		for j, char := range row {
 			switch char {
@@ -156,6 +155,9 @@ func ParseBoardString(boardString []string, Users int) (*Board, [][2]int) {
 			case 'p':
 				Positions[0] = [2]int{i, j}
 				board.Cells[i][j].pacman = true
+			case ' ':
+				EmptyCells = append(EmptyCells, [2]int{i, j})
+
 				// case 'a':
 				// 	Positions[1] = [2]int{i, j}
 				// 	board.Cells[i][j].enemy = enemyA
@@ -179,7 +181,7 @@ func ParseBoardString(boardString []string, Users int) (*Board, [][2]int) {
 		board.Cells[Positions[i][0]][Positions[i][1]].enemy = enemy
 	}
 
-	return board, Positions
+	return board, Positions, EmptyCells
 
 }
 
@@ -197,10 +199,11 @@ type GameState struct {
 	Board           *Board
 	MoveState       []move
 	PlayerPositions [][2]int
-	Scores          [5]int
-	mut             sync.Mutex
-	ctx             context.Context
-	cancel          context.CancelFunc
+	EmptyCells      [][2]int
+	// Scores          [5]int
+	mut    sync.Mutex
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 func (g *GameState) move() {
@@ -343,34 +346,91 @@ func (g *GameState) move() {
 }
 
 func InitializeGameState(Users int) *GameState {
-	board, positions := ParseBoardString(boardString, Users)
-	fmt.Println(positions)
-	ctx, cancel := context.WithCancel(context.Background())
-	return &GameState{
-		Board:           board,
-		MoveState:       make([]move, Users),
-		Scores:          [5]int{0, 200, 200, 200, 200},
-		PlayerPositions: positions,
-		mut:             sync.Mutex{},
-		ctx:             ctx,
-		cancel:          cancel,
+	g := &GameState{
+
+		MoveState: make([]move, Users),
+		// Scores:          [5]int{0, 200, 200, 200, 200},
+
+		mut: sync.Mutex{},
 	}
+
+	board, positions, emptyCells := ParseBoardString(boardString, Users)
+	g.Board = board
+	g.PlayerPositions = positions
+	g.EmptyCells = emptyCells
+	ctx, cancel := context.WithCancel(context.Background())
+	g.ctx = ctx
+	g.cancel = cancel
+
+	return g
 
 }
 
-func (g *GameState) gametick() (over bool) {
+func (g *GameState) gametick(lobby *Lobby) (over bool) {
 	g.move()
 	if g.Board.Cells[g.PlayerPositions[0][0]][g.PlayerPositions[0][1]].enemy != NoPlayer {
-		fmt.Println("Game over!")
-		return true
+		var pacman *User
+		for _, user := range lobby.Users {
+			if user.pacman {
+				pacman = user
+			}
+		}
+
+		if !pacman.PoweredUp {
+			for _, user := range lobby.Users {
+				if user.pacman {
+					user.Score -= 50
+				} else {
+					if user.Enemy == g.Board.Cells[g.PlayerPositions[0][0]][g.PlayerPositions[0][1]].enemy {
+						user.Score += 100
+					}
+				}
+				g.Board.Cells[g.PlayerPositions[0][0]][g.PlayerPositions[0][1]].pacman = false
+				g.Board.Cells[14][3].pacman = true
+				g.PlayerPositions[0] = [2]int{14, 3}
+			}
+		} else {
+			for _, user := range lobby.Users {
+				var enemy *User
+				if user.pacman {
+					user.Score += 100
+				} else {
+					if user.Enemy == g.Board.Cells[g.PlayerPositions[0][0]][g.PlayerPositions[0][1]].enemy {
+						enemy = user
+						user.Score += 100
+					}
+				}
+				id := int(enemy.Enemy)
+				g.Board.Cells[g.PlayerPositions[0][0]][g.PlayerPositions[0][1]].enemy = NoPlayer
+				g.Board.Cells[EnemyLocArr[id-1][0]][EnemyLocArr[id-1][1]].enemy = enemy.Enemy
+				g.PlayerPositions[id] = EnemyLocArr[id-1]
+			}
+		}
 	}
 	if g.Board.Cells[g.PlayerPositions[0][0]][g.PlayerPositions[0][1]].background == food {
 		g.Board.Cells[g.PlayerPositions[0][0]][g.PlayerPositions[0][1]].background = empty
-		g.Scores[0]++
+		for _, user := range lobby.Users {
+			if user.pacman {
+				user.Score += 10
+			} else {
+				user.Score -= 5
+			}
+		}
 	}
-	for i, score := range g.Scores[1:] {
-		if score > 0 {
-			g.Scores[i+1] = score - 1
+	if g.Board.Cells[g.PlayerPositions[0][0]][g.PlayerPositions[0][1]].background == powerup {
+		g.Board.Cells[g.PlayerPositions[0][0]][g.PlayerPositions[0][1]].background = empty
+		for _, user := range lobby.Users {
+			if user.pacman {
+				user.PoweredUp = true
+			}
+		}
+
+	}
+	if len(g.EmptyCells) != 0 {
+		n := rand.Intn(1000)
+		if n >= 900 {
+			i := rand.Intn(len(g.EmptyCells)) - 1
+			g.Board.Cells[g.EmptyCells[i][0]][g.EmptyCells[i][1]].background = powerup
 		}
 	}
 

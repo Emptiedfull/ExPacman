@@ -116,6 +116,7 @@ const UpdateLobbyList = async () => {
         const noLobbiesMessage = document.createElement("div");
         noLobbiesMessage.className = "NoLobbies";
         noLobbiesMessage.innerHTML = "<p>No lobbies available. Create one to start playing!</p>";
+        noLobbiesMessage.style.textAlign = "center";
         LobbyList.appendChild(noLobbiesMessage);
         return;
     }

@@ -41,13 +41,40 @@ var ws
 
 colors = ["#ffb751", "#ff0000", "#00ffff", "#de9751", "#ffb751"];
 
-var pacman = { x: 1, y: 14, targetX: 1, targetY: 14, dir: "right" }
+var pacman = { x: 1, y: 14, targetX: 1, targetY: 14, dir: "right",frame:0 }
 var Ghosts = [
     { x: 1, y: 14, targetX: 1, targetY: 14, dir: "right", name: "1", color: "#ffb751" },
     { x: 1, y: 14, targetX: 1, targetY: 14, dir: "right", name: "2", color: "#ff0000" },
     { x: 1, y: 14, targetX: 1, targetY: 14, dir: "right", name: "3", color: "#00ffff" },
     { x: 1, y: 14, targetX: 1, targetY: 14, dir: "right", name: "4", color: "#de9751" },
 ]
+var started = false
+const images = {}
+
+var users = 0
+
+const flipframe = () =>{
+    if (pacman.frame === 0) {
+        pacman.frame = 1;
+    } else {
+        pacman.frame = 0;
+    }
+}
+
+const modifyUsers = (number)=>{
+    users = number
+    startButton = document.getElementById("startGameButton");
+    if (users <= 1 ){
+        
+        console.log("disabling",startButton)
+        if (startButton){
+            startButton.classList.add("disabled");
+        }
+
+    }else{
+        startButton.classList.remove("disabled");
+    }
+}
 
 
 
@@ -75,6 +102,23 @@ const Directions = {
 
 document.addEventListener("DOMContentLoaded", () => {
 
+
+    gameSpeedSlider = document.getElementById("gameSpeedSlider");
+    gameSpeedValue = document.getElementById("gameSpeedValue");
+    gameSpeedValue.textContent = gameSpeedSlider.value
+    gameSpeedSlider.addEventListener("input", (event) => {
+        gameSpeedValue.textContent = event.target.value;
+    })
+
+    DurationSlider = document.getElementById("DurationSlider");
+    DurationValue = document.getElementById("DurationValue");
+    DurationValue.textContent = DurationSlider.value
+    DurationSlider.addEventListener("input", (event) => {
+        DurationValue.textContent = event.target.value;
+    })
+
+    loadImages();
+
     SettingsContainer = document.getElementById("SettingsContainer");
     ToggleHost();
 
@@ -89,6 +133,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const WsURL = `ws://localhost:8080/ws/${LobbyID}`;
     console.log("WebSocket URL:", WsURL);
+
+    inviteLink = document.getElementById("LobbyId");
+    inviteLink.textContent = "#"+ LobbyID;
 
 
     ws = new WebSocket(WsURL);
@@ -107,7 +154,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 direction: direction,
             };
             ws.send(JSON.stringify(Message));
-            console.log("Move state sent:", Message, ws.readyState);
         }
     })
 
@@ -132,10 +178,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     startButton = document.getElementById("startGameButton");
     startButton.addEventListener("click", () => {
+        if (users <= 1){
+            return
+        }
         Message = {
             type: "StartGame",
+            options :{
+                game_speed:1000- parseInt(gameSpeedSlider.value),
+                duration: parseInt(DurationSlider.value),
+            },
             lobbyID: LobbyID,
         }
+        console.log("Start game message:", Message);
         ws.send(JSON.stringify(Message));
     })
 
@@ -160,7 +214,7 @@ const UpdateCanvas = (board) => {
     const mapping = {
         "#": "#000",
         ".": "#2121ff",
-        "o": "#ff0",
+        "0": "#ff0",
     };
 
     for (let i = 0; i < board.length; i++) {
@@ -184,23 +238,56 @@ const UpdateCanvas = (board) => {
                 ctx.fill();
 
             }
+            if (char === "0"){
+                
+            }
         }
     }
 
+    // ctx.fillStyle = "#ffff00";
+    // ctx.beginPath()
+    // ctx.arc(
+    //     pacman.targetX * PixelWidth + PixelWidth / 2,
+    //     pacman.targetY * PixelHeight + PixelHeight / 2,
+    //     PixelWidth / 2 - 2,
+    //     0,
+    //     2 * Math.PI
+    // )
+    // ctx.fill()
 
 
-    // Ghosts.forEach(g => {
-    //     ctx.fillStyle = g.color;
-    //     ctx.beginPath() 
-    //     ctx.arc(
-    //         g.x * PixelWidth + PixelWidth / 2,
-    //         g.y * PixelHeight + PixelHeight / 2,
-    //         PixelWidth / 2 - 2,
-    //         0,
-    //         2 * Math.PI
-    //     )
-    //     ctx.fill()
-    // })
+    ctx.drawImage(
+        images[`0-${pacman.dir || 0}-${pacman.frame || 0}`],
+        pacman.targetX * PixelWidth,
+        pacman.targetY * PixelHeight,
+        PixelWidth,
+        PixelHeight,
+    )
+    flipframe()
+
+
+
+    Ghosts.forEach(g => {
+
+        ctx.drawImage(
+            images[`${g.name}-${g.dir || 0}`],
+            g.targetX * PixelWidth,
+            g.targetY * PixelHeight,
+            PixelWidth,
+            PixelHeight,
+        )
+
+        // ctx.fillStyle = g.color;
+        // ctx.beginPath() 
+        // ctx.arc(
+        //     g.targetX * PixelWidth + PixelWidth / 2,
+        //     g.targetY * PixelHeight + PixelHeight / 2,
+        //     PixelWidth / 2 - 2,
+        //     0,
+        //     2 * Math.PI
+        // )
+        // ctx.fill()
+    })
 
 }
 
@@ -212,6 +299,8 @@ const HandleWsMessage = (message) => {
     const data = JSON.parse(message)
 
     if (data.type === "UserInfoUpdate") {
+        console.log("User info update received:", data.users);
+        modifyUsers(data.users.length)
         UpdateUsers(data.users);
     }
 
@@ -221,7 +310,39 @@ const HandleWsMessage = (message) => {
         ToggleHost();
     }
 
+    if (data.type === "GameEnd"){
+        console.log(data);
+        OverOverlay = document.getElementById("GameOverOverlay");
+        OverOverlay.style.display = "flex";
+        const Winner = document.getElementById("winner");
+        Winner.textContent = `Winner: ${data.winner}`;
+        const scores = document.getElementById("Scores");
+        var i = 1
+        // data.scores.map((user, score) => {
+           
+        // })
+
+        Object.keys(data.scores).forEach(user => {
+            const score = data.scores[user];
+             const scoreElement = document.createElement("div");
+            scoreElement.className = "ScoreItem";
+            const playerName = document.createElement("h2");
+            const playerNameInner = document.createElement("span");
+            i = Object.keys(data.scores).indexOf(user) + 1
+            playerNameInner.textContent = `${i}. ${user}`
+            playerName.appendChild(playerNameInner);
+            const scoreh2 = document.createElement("h2");
+            scoreh2.className = "score";
+            scoreh2.textContent = score;
+            scoreElement.appendChild(playerName);
+            scoreElement.appendChild(scoreh2);
+            scores.appendChild(scoreElement);
+
+        })
+    }
+
     if (data.type === "StartAlert") {
+        started = true
         console.log("Start alert received:", data);
         Role = data.role;
         console.log("Role assigned:", Role);
@@ -283,8 +404,7 @@ const HandleWsMessage = (message) => {
 
         }))
         // console.log("Board update received:", data.board);
-        //  UpdateCanvas(data.board); 
-        animateEntities(data.board);
+        UpdateCanvas(data.board);
     }
 }
 
@@ -398,7 +518,7 @@ function animateEntities(boardTemp) {
         ctx.fill()
     })
 
-    
+
 
 
 
@@ -423,22 +543,31 @@ const UpdateUsers = (users) => {
     const PlayerContainer = document.getElementById("playersContainer");
     PlayerContainer.innerHTML = "";
 
-
+    console.log("Updating users:", users);
 
     users.forEach(e => {
         var id
-        if (e.pacman) {
+        var imgsrc
+        if (!started){
+            id = e.enemy || 0;
+            imgsrc = `/static/images/ghost.png`;
+        }else if  (e.pacman) {
             id = 0
+            imgsrc = "/static/images/sprites/0/3-0.png";
         }
         else {
             id = e.enemy
+            imgsrc = `/static/images/sprites/${id}/1.png`;
         }
         const div = document.createElement("div");
         div.className = "PlayerItem";
+        if (e.you === true){
+            div.className = "PlayerItem You"
+        }
         const Title = document.createElement("h1");
         Title.className = "PlayerTitle"
         host = e.host ? "*" : "";
-        Title.innerHTML = `${host}${e.name}<img src="/static/images/ghost.png" alt="Ghost Icon" class="ghost-icon">`
+        Title.innerHTML = `${host}${e.name}<img src="${imgsrc}" alt="Ghost Icon" class="ghost-icon">`
         const Score = document.createElement("h2")
         Score.className = "PlayerScore";
         Score.innerHTML = ` Score: <span class="yellow" id="${id}">0</span>`;
@@ -521,4 +650,27 @@ const loadCanvas = () => {
 
     // console.log("Canvas loaded with dimensions:", Width, Height,PixelHeight,PixelWidth);
 
+}
+
+
+const loadImages = () => {
+    const path = "/static/images/sprites/";
+    for (let i = 0; i <= 4; i++) {
+        for (let j = 0; j <= 3; j++) {
+
+            if (i === 0) {
+                for (let k = 0; k <= 1; k++) {
+                    const img = new Image();
+                    img.src = `${path}${i}/${j}-${k}.png?v=1`;
+                    images[`${i}-${j}-${k}`] = img;
+                }
+            } else {
+
+
+                const img = new Image();
+                img.src = `${path}${i}/${j}.png`;
+                images[`${i}-${j}`] = img;
+            }
+        }
+    }
 }
