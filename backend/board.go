@@ -16,13 +16,13 @@ var boardString = []string{
 	"#..........................#",
 	"#.####.##.########.##.####.#",
 	"#.####.##.########.##.####.#",
-	"#......##....##....##......#",
+	"#..0...##....##....##......#",
 	"######.##### ## #####.######",
 	"######.##### ## #####.######",
 	"######.##          ##.######",
 	"######.## ###  ### ##.######",
 	"######.## #      # ##.######",
-	" p     ##          ##       ",
+	" p  0  ##          ##       ",
 	"######.## #      # ##.######",
 	"######.## ###  ### ##.######",
 	"######.##          ##.######",
@@ -155,6 +155,8 @@ func ParseBoardString(boardString []string, Users int) (Board *Board, playerPosi
 			case 'p':
 				Positions[0] = [2]int{i, j}
 				board.Cells[i][j].pacman = true
+			case '0':
+				board.Cells[i][j].background = powerup
 			case ' ':
 				EmptyCells = append(EmptyCells, [2]int{i, j})
 
@@ -302,7 +304,7 @@ func (g *GameState) move() {
 
 					continue
 				}
-				if g.Board.Cells[x][y+1].background == wall || g.Board.Cells[x][y-1].enemy != NoPlayer {
+				if g.Board.Cells[x][y+1].background == wall || g.Board.Cells[x][y+1].enemy != NoPlayer {
 					continue
 				}
 				g.Board.Cells[x][y].enemy = NoPlayer
@@ -366,7 +368,7 @@ func InitializeGameState(Users int) *GameState {
 
 }
 
-func (g *GameState) gametick(lobby *Lobby) (over bool) {
+func (g *GameState) gametick(lobby *Lobby, powerupChan chan int, soundchan chan string) (over bool) {
 	g.move()
 	if g.Board.Cells[g.PlayerPositions[0][0]][g.PlayerPositions[0][1]].enemy != NoPlayer {
 		var pacman *User
@@ -377,6 +379,7 @@ func (g *GameState) gametick(lobby *Lobby) (over bool) {
 		}
 
 		if !pacman.PoweredUp {
+			soundchan <- "death_0.wav"
 			for _, user := range lobby.Users {
 				if user.pacman {
 					user.Score -= 50
@@ -390,6 +393,7 @@ func (g *GameState) gametick(lobby *Lobby) (over bool) {
 				g.PlayerPositions[0] = [2]int{14, 3}
 			}
 		} else {
+			soundchan <- "eat_ghost.wav"
 			for _, user := range lobby.Users {
 				var enemy *User
 				if user.pacman {
@@ -397,17 +401,20 @@ func (g *GameState) gametick(lobby *Lobby) (over bool) {
 				} else {
 					if user.Enemy == g.Board.Cells[g.PlayerPositions[0][0]][g.PlayerPositions[0][1]].enemy {
 						enemy = user
-						user.Score += 100
+						user.Score -= 50
+
+						id := int(enemy.Enemy)
+						g.Board.Cells[g.PlayerPositions[0][0]][g.PlayerPositions[0][1]].enemy = NoPlayer
+						g.Board.Cells[EnemyLocArr[id-1][0]][EnemyLocArr[id-1][1]].enemy = enemy.Enemy
+						g.PlayerPositions[id] = EnemyLocArr[id-1]
 					}
 				}
-				id := int(enemy.Enemy)
-				g.Board.Cells[g.PlayerPositions[0][0]][g.PlayerPositions[0][1]].enemy = NoPlayer
-				g.Board.Cells[EnemyLocArr[id-1][0]][EnemyLocArr[id-1][1]].enemy = enemy.Enemy
-				g.PlayerPositions[id] = EnemyLocArr[id-1]
+
 			}
 		}
 	}
 	if g.Board.Cells[g.PlayerPositions[0][0]][g.PlayerPositions[0][1]].background == food {
+		soundchan <- "eat_dot_0.wav"
 		g.Board.Cells[g.PlayerPositions[0][0]][g.PlayerPositions[0][1]].background = empty
 		for _, user := range lobby.Users {
 			if user.pacman {
@@ -419,17 +426,13 @@ func (g *GameState) gametick(lobby *Lobby) (over bool) {
 	}
 	if g.Board.Cells[g.PlayerPositions[0][0]][g.PlayerPositions[0][1]].background == powerup {
 		g.Board.Cells[g.PlayerPositions[0][0]][g.PlayerPositions[0][1]].background = empty
-		for _, user := range lobby.Users {
-			if user.pacman {
-				user.PoweredUp = true
-			}
-		}
+		powerupChan <- 2
 
 	}
 	if len(g.EmptyCells) != 0 {
 		n := rand.Intn(1000)
-		if n >= 900 {
-			i := rand.Intn(len(g.EmptyCells)) - 1
+		if n >= 980 {
+			i := rand.Intn(len(g.EmptyCells))
 			g.Board.Cells[g.EmptyCells[i][0]][g.EmptyCells[i][1]].background = powerup
 		}
 	}

@@ -7,16 +7,20 @@
     <title>Lobby</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/static/styles/global.css?v=10">
-    <link rel="stylesheet" href="/static/styles/lobby.css?v=2">
+    <link rel="stylesheet" href="/static/styles/lobby.css?v=223">
 
-    <script src="/static/scripts/lobby.js?v=22" defer></script>
+    <script src="/static/scripts/lobby.js?v=2" defer></script>
 </head>
 
 <body>
+    
     <div class="topbar">
         <h1>
             <span class="blue">Ex</span><span class="yellow">Pacman</span>
         </h1>
+        <h1 class="timer" id="timer" style="display: none;">
+            192 
+    </h1>
         <h1 class="homeIcon" id="Home">
             <i class="fa fa-home"></i>
         </h1>
@@ -43,15 +47,18 @@
                     <div class="SpeedSlider sliderContainer">
                         <label for="gameSpeedSlider" class="sliderLabel" style="font-size:1.2em;">Game Speed:</label>
                         <div class="sliderValueContainer">
-                        <input type="range" class="slider" id="gameSpeedSlider" min="100" max="900" value="500" step="100" />
-                        <span id="gameSpeedValue" class="sliderValue">500</span>
+                            <input type="range" class="slider" id="gameSpeedSlider" min="100" max="900" value="500"
+                                step="100" />
+                            <span id="gameSpeedValue" class="sliderValue">500</span>
                         </div>
                     </div>
-                     <div class="DurationSlider sliderContainer">
-                        <label for="DurationSlider" class="sliderLabel" style="font-size:1.2em;">Game Duration(s):</label>
+                    <div class="DurationSlider sliderContainer">
+                        <label for="DurationSlider" class="sliderLabel" style="font-size:1.2em;">Game
+                            Duration(s):</label>
                         <div class="sliderValueContainer">
-                        <input type="range" class="slider" id="DurationSlider" min="60" max="240" value="90" step="10" />
-                        <span id="DurationValue" class="sliderValue">90</span>
+                            <input type="range" class="slider" id="DurationSlider" min="60" max="240" value="90"
+                                step="10" />
+                            <span id="DurationValue" class="sliderValue">90</span>
                         </div>
                     </div>
 
@@ -59,57 +66,62 @@
                 <div class="StartButtonContainer">
                     <h1 class="LobbyId" id="LobbyId"></h1>
                     <button id="startGameButton" class="start-button">Start Game</button>
+                    <div class="button-overlay" id="buttonOverlay">Invite 1 more player(or join on another tab)</div>
                 </div>
             </div>
         </div>
-            <div class="Information">
-        <h1 class="InformationTitle">How to play</h1>
-        <div class="InformationContent">
-            <div class="InfortationItem">
-                <h2>>Movement</h2>   
-                <p>Use the arrow keys to move Pacman and the ghosts.</p>
+        <div class="Information">
+            <h1 class="InformationTitle">How to play</h1>
+            <div class="InformationContent">
+                <div class="InfortationItem">
+                    <h2>>Movement</h2>
+                    <p>Use the arrow keys to move Pacman and the ghosts.</p>
+                </div>
+                <div class="InfortationItem">
+                    <h2>>Scoring</h2>
+                    <p> Food: +20 Pacman -5 Ghost <br />
+                        Caught: -50 Pacman +100 Ghost
+                    </p>
+                </div>
+                <div class="InfortationItem">
+                    <h2>>Winning</h2>
+                    <p>After the time is up, the team with the most points wins.</p>
+                </div>
+                   <div class="InfortationItem">
+                    <h2>>PowerUps</h2>
+                    <p>Power Pellet: Role reversal</p>
+                </div>
             </div>
-            <div class="InfortationItem">
-                <h2>>Scoring</h2>   
-                <p>Food: +20 Pacman -5 Ghost <br/>
-                Caught: -50 Pacman +100 Ghost
-                </p>
-            </div>
-             <div class="InfortationItem">
-                <h2>>Winning</h2>   
-                <p>After the time is up, the team with the most points wins.</p>
-            </div>
+
         </div>
-
-    </div>
-    <div class="GameOverOverlay" id="GameOverOverlay" style="display: none;">
-        <h1 class="GameOverTitle">
-            Game Over
-        </h1>
-        <div class="GameOverContent">
-            <div class="GameOverHeader">
-                <h2 class="winner" id="winner">Pacman Won</h2>
-                <h2 class="time">12m 52s</h2>
-            </div>
-            <div class="Scores" id="Scores">
+        <div class="GameOverOverlay" id="GameOverOverlay" style="display: none;">
+            <h1 class="GameOverTitle">
+                Game Over
+            </h1>
+            <div class="GameOverContent">
+                <div class="GameOverHeader">
+                    <h2 class="winner" id="winner">Pacman Won</h2>
+                    <h2 class="time">12m 52s</h2>
+                </div>
+                <div class="Scores" id="Scores">
 
 
-                <!-- <div class="ScoreItem">
+                    <!-- <div class="ScoreItem">
                     <h2 class="playerName">
                         <span class="playerName">4.Player 1</span>
                         <img src="/static/images/sprites/0/0-0.png" class="playerSprite" />
                     </h2>
                     <h2 class="score">100</h2>
                 </div>  -->
+                </div>
+                <button class="LobbyButton" onclick="location.href='/'"> Return to Lobby</button>
+
             </div>
-            <button class="LobbyButton" onclick="location.href='/'"> Return to Lobby</button>
+
 
         </div>
-      
+    </div>
 
-    </div>
-    </div>
-  
     <div class="retro-overlay"></div>
 
 </body>

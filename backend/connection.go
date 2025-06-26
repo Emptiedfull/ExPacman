@@ -57,6 +57,11 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusTooManyRequests)
 		fmt.Fprintln(w, "Lobby is at max capacity")
 	}
+	if lobby.GameState != nil {
+		fmt.Println("Game In way")
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintln(w, "Game in way")
+	}
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -79,6 +84,14 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("ID mismatch:", nameResponse.ID, "expected:", lobby.ID)
 		conn.WriteMessage(websocket.TextMessage, []byte("ID mismatch"))
 		return
+	}
+
+	for _, users := range lobby.Users {
+		if nameResponse.Name == users.Name {
+			fmt.Println("Duplicte name")
+			conn.WriteMessage(websocket.TextMessage, []byte("duplicate name"))
+			return
+		}
 	}
 
 	addUser(lobby, conn, nameResponse.Name)
@@ -127,7 +140,6 @@ func sendUserInfoUpdate(U UserInfoUpdate, lobby *Lobby) {
 		for i, u := range U.Users {
 			if user.ID == u.ID {
 				U.Users[i].You = true
-				fmt.Println("sending userinfo Update, U")
 				jsonbytes, err := json.Marshal(U)
 				if err != nil {
 					fmt.Println("eror marshaling 131", err)
@@ -252,14 +264,4 @@ func enableCORS(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
-}
-
-func setUpServer() {
-	http.Handle("/lobbies", enableCORS(http.HandlerFunc(getLobbies)))
-	http.Handle("/ws/", enableCORS(http.HandlerFunc(wsHandler)))
-	http.Handle("/create", enableCORS(http.HandlerFunc(makeLobby)))
-	fmt.Println("WebSocket server started n :8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
-		fmt.Println("ListenAndServe error:", err)
-	}
 }

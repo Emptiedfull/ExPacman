@@ -27,8 +27,12 @@ type UserAlert struct {
 	Message string `json:"name"`
 }
 type PowerUpAlert struct {
-	Type   string `json:"type`
-	status bool   `json:"status"`
+	Type   string `json:"type"`
+	Status bool   `json:"status"`
+}
+type TimerAlert struct {
+	Type string `json:"type"`
+	Val  int    `json:"val"`
 }
 
 type StartAlert struct {
@@ -399,28 +403,62 @@ func (l *Lobby) handleGameEnd() {
 
 func (g *GameState) startGame(Lobby *Lobby, options GameOptions) (result bool) {
 
-	fmt.Println(Lobby.GameState.PlayerPositions)
+	soundChan := make(chan string)
+	go SoundEngine(Lobby, soundChan)
+	go func() {
+		soundChan <- "start.wav"
+	}()
+
+	secondTicker := time.NewTicker(1 * time.Second)
+	defer secondTicker.Stop()
+
+	S := options.Timeout
 
 	gameOverTicker := time.NewTicker(time.Duration(options.Timeout) * time.Second)
 	defer gameOverTicker.Stop()
 	ticker := time.NewTicker(time.Duration(options.GameSpeed) * time.Millisecond)
 	defer ticker.Stop()
 
-	var PowerUpTicker *time.Ticker
-	powerUpChan := make(chan []int)
+	PowerUpTicker := time.NewTicker(time.Duration(options.Timeout) / 8 * time.Second)
+	PowerUpTicker.Stop()
+
+	var PowerUpTickerStatus bool = false
+
+	powerUpChan := make(chan int, 2)
 
 	for {
 		select {
+		case <-secondTicker.C:
+			S -= 1
+
+			timerAlert := &TimerAlert{
+				Type: "timer",
+				Val:  S,
+			}
+
+			jsonbytes, err := json.Marshal(timerAlert)
+			if err != nil {
+				fmt.Println("error marshaling 425", err)
+			} else {
+				Lobby.broadcast <- jsonbytes
+			}
+
 		case <-gameOverTicker.C:
 			defer Lobby.handleGameEnd()
+			soundChan <- "cancel"
 			return true
 
 		case <-PowerUpTicker.C:
+			PowerUpTickerStatus = !PowerUpTickerStatus
+			for _, user := range Lobby.Users {
+				if user.pacman {
+					user.PoweredUp = false
+				}
+			}
 			PowerUpTicker.Stop()
-			PowerUpTicker = nil
 			powerUpAlert := &PowerUpAlert{
 				Type:   "powerUp",
-				status: false,
+				Status: false,
 			}
 			jsonbytes, err := json.Marshal(powerUpAlert)
 			if err != nil {
@@ -430,10 +468,17 @@ func (g *GameState) startGame(Lobby *Lobby, options GameOptions) (result bool) {
 			}
 
 		case <-powerUpChan:
-			if PowerUpTicker == nil {
+			if !PowerUpTickerStatus {
+				soundChan <- "eat_fruit.wav"
+				PowerUpTickerStatus = !PowerUpTickerStatus
+				for _, user := range Lobby.Users {
+					if user.pacman {
+						user.PoweredUp = true
+					}
+				}
 				powerUpAlert := &PowerUpAlert{
 					Type:   "powerUp",
-					status: true,
+					Status: true,
 				}
 				jsonbytes, err := json.Marshal(powerUpAlert)
 				if err != nil {
@@ -442,14 +487,14 @@ func (g *GameState) startGame(Lobby *Lobby, options GameOptions) (result bool) {
 					Lobby.broadcast <- jsonbytes
 				}
 
-				PowerUpTicker = time.NewTicker(time.Duration(options.Timeout) / 8 * time.Second)
+				PowerUpTicker = time.NewTicker(time.Duration(options.Timeout) / 10 * time.Second)
 			} else {
 				PowerUpTicker.Stop()
-				PowerUpTicker = time.NewTicker(time.Duration(options.Timeout) / 8 * time.Second)
+				PowerUpTicker = time.NewTicker(time.Duration(options.Timeout) / 10 * time.Second)
 			}
 
 		case <-ticker.C:
-			if g.gametick(Lobby) {
+			if g.gametick(Lobby, powerUpChan, soundChan) {
 				return true
 			}
 
@@ -469,7 +514,10 @@ func (g *GameState) startGame(Lobby *Lobby, options GameOptions) (result bool) {
 				if user.pacman {
 					BoardUpdate.Scores[0] = user.Score
 				} else {
-					BoardUpdate.Scores[int(user.Enemy)] = user.Score
+					if int(user.Enemy) < len(BoardUpdate.Scores) {
+						BoardUpdate.Scores[int(user.Enemy)] = user.Score
+					}
+
 				}
 			}
 
@@ -492,6 +540,36 @@ func (g *GameState) startGame(Lobby *Lobby, options GameOptions) (result bool) {
 		case <-g.ctx.Done():
 			fmt.Println("Game stopped")
 			return false
+		}
+	}
+
+}
+
+type SoundAlert struct {
+	Type  string `json:"type"`
+	Sound string `json:"sound"`
+}
+
+func SoundEngine(lobby *Lobby, soundchan chan string) {
+
+	for {
+		select {
+		case s := <-soundchan:
+			fmt.Println(s)
+			if s == "cancel" {
+				return
+			}
+
+			soundAlert := &SoundAlert{
+				Type:  "sound",
+				Sound: s,
+			}
+			jsonbytes, err := json.Marshal(soundAlert)
+			if err != nil {
+				fmt.Println("error marshaling 563", err)
+			} else {
+				lobby.broadcast <- jsonbytes
+			}
 		}
 	}
 

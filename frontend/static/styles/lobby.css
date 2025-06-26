@@ -1,9 +1,11 @@
 .topbar{
+    position: relative;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
     width: 100%;
+    height: 10vh;
     font-size: 1rem;
     padding-top: 1rem;
     padding-left: 1rem;
@@ -275,8 +277,14 @@ Body{
     flex-direction: column-reverse ;
     align-items: center;
     gap: 0.5rem;
-    
+    position: relative;
 
+}
+
+.button-overlay {
+    display: none;
+
+    font-size: 0.6em;
 }
 
 .LobbyId{
@@ -413,4 +421,13 @@ Body{
     text-shadow: 0 0 4px #fffbe7;
     font-size: 1.1em;
     margin-left: 0.5em;
+}
+
+.timer {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0;
+    z-index: 2;
 }

@@ -66,6 +66,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             Namefield = document.getElementById("nameField");
             Namefield.style.display = "flex";
+            Namefield.getElementById("playerName").focus()
 
             updateOverlay();
             
@@ -92,6 +93,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         } 
         if (mode === "join"){
             window.location.href = `/lobby/${JoiningId}/${input.value}`;
+        }
+    })
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+            enterGameButton.click();
         }
     })
 }

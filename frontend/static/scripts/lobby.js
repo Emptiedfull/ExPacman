@@ -49,6 +49,7 @@ var Ghosts = [
     { x: 1, y: 14, targetX: 1, targetY: 14, dir: "right", name: "4", color: "#de9751" },
 ]
 var started = false
+var powerUped = false
 const images = {}
 
 var users = 0
@@ -64,14 +65,17 @@ const flipframe = () =>{
 const modifyUsers = (number)=>{
     users = number
     startButton = document.getElementById("startGameButton");
+    buttonOverlay = document.getElementById("buttonOverlay");
     if (users <= 1 ){
         
         console.log("disabling",startButton)
         if (startButton){
             startButton.classList.add("disabled");
+            buttonOverlay.style.display = "flex";
         }
 
     }else{
+        buttonOverlay.style.display = "None";
         startButton.classList.remove("disabled");
     }
 }
@@ -100,7 +104,13 @@ const Directions = {
     "ArrowRight": 3,
 }
 
+var timer;
+
 document.addEventListener("DOMContentLoaded", () => {
+
+
+    timer = document.getElementById("timer");
+    timer.display = "None";
 
 
     gameSpeedSlider = document.getElementById("gameSpeedSlider");
@@ -193,6 +203,14 @@ document.addEventListener("DOMContentLoaded", () => {
         ws.send(JSON.stringify(Message));
     })
 
+    if (startButton){
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" && !startButton.disabled) {
+                startButton.click();
+            }
+        })
+    }
+
 
 });
 
@@ -213,14 +231,13 @@ const UpdateCanvas = (board) => {
 
     const mapping = {
         "#": "#000",
-        ".": "#2121ff",
-        "0": "#ff0",
+        ".": "#9797ae",
     };
 
     for (let i = 0; i < board.length; i++) {
         for (let j = 0; j < board[i].length; j++) {
             const char = board[i][j];
-            ctx.fillStyle = mapping[char] || "#2121ff";
+            ctx.fillStyle = mapping[char] || "#9797ae";
 
 
 
@@ -231,7 +248,7 @@ const UpdateCanvas = (board) => {
                 ctx.arc(
                     j * PixelWidth + PixelWidth / 2,
                     i * PixelHeight + PixelHeight / 2,
-                    PixelWidth / 4,
+                    PixelWidth / 6,
                     0,
                     2 * Math.PI
                 );
@@ -239,6 +256,16 @@ const UpdateCanvas = (board) => {
 
             }
             if (char === "0"){
+                  ctx.fillStyle = "#ff0";
+                ctx.beginPath();
+                ctx.arc(
+                    j * PixelWidth + PixelWidth / 2,
+                    i * PixelHeight + PixelHeight / 2,
+                    PixelWidth / 3,
+                    0,
+                    2 * Math.PI
+                );
+                ctx.fill();
                 
             }
         }
@@ -269,8 +296,16 @@ const UpdateCanvas = (board) => {
 
     Ghosts.forEach(g => {
 
+        var name = g.name
+        var dir = g.dir || 0
+        
+        if (powerUped ){
+            name = "5"
+            dir = Math.random() > 0.5 ? 2 : 1; 
+        }
+
         ctx.drawImage(
-            images[`${g.name}-${g.dir || 0}`],
+            images[`${name}-${dir}`],
             g.targetX * PixelWidth,
             g.targetY * PixelHeight,
             PixelWidth,
@@ -297,11 +332,22 @@ const HandleWsMessage = (message) => {
     const LobbyID = window.location.href.split("/").pop();
 
     const data = JSON.parse(message)
+    console.log(data.type)
 
     if (data.type === "UserInfoUpdate") {
         console.log("User info update received:", data.users);
         modifyUsers(data.users.length)
         UpdateUsers(data.users);
+    }
+
+    if (data.type === "powerUp") {
+        powerUped = data.status;
+        console.log("Power-up received:", data);
+    }
+
+    if (data.type === "sound"){
+        playSound(data.sound);
+
     }
 
     if (data.type === "HostUpdate") {
@@ -339,6 +385,12 @@ const HandleWsMessage = (message) => {
             scores.appendChild(scoreElement);
 
         })
+    }
+
+    if (data.type === "timer"){
+        console.log(data)
+        timer.style.display = "flex";
+        timer.textContent = data.val;
     }
 
     if (data.type === "StartAlert") {
@@ -655,7 +707,14 @@ const loadCanvas = () => {
 
 const loadImages = () => {
     const path = "/static/images/sprites/";
-    for (let i = 0; i <= 4; i++) {
+    for (let i = 0; i <= 5; i++) {
+        if (i === 5){
+            for (let j=0; j <= 1; j++) {
+                const img = new Image();
+                img.src = `${path}${i}/${j+1}.png?v=2`;
+                images[`${i}-${j}`] = img;
+            }
+        }
         for (let j = 0; j <= 3; j++) {
 
             if (i === 0) {
@@ -673,4 +732,16 @@ const loadImages = () => {
             }
         }
     }
+}
+
+var eatSoundStatus = 0 
+
+const playSound = (sound) => {
+    var audio = new Audio(`/static/sounds/${sound}`);
+    audio.volume = 0.5;
+    audio.play().catch(error => {
+        console.error("Error playing sound:", error);
+    }); 
+
+
 }

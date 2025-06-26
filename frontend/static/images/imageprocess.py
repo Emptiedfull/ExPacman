@@ -14,15 +14,22 @@ def convertTrans(img):
     return img
 path = "sprites/"
 pathnew = "sprites/"
-for i in range(0,5):
-    for j in range(0,4):
-
-        if i == 0:
-            for k in range(0,2):
-                img = Image.open(path+str(i)+"/"+str(j)+"-"+str(k)+".png")
-                img = convertTrans(img)
-                img.save(pathnew+str(i)+"/"+str(j)+"-"+str(k)+".png", "PNG")
-        else:
-            img = Image.open(path+str(i)+"/"+str(j)+".png")
+for i in range(0,6):
+    if i == 5:
+        for j in  range(0,2):
+            l = j +1
+            img = Image.open(path+str(i) + "/"+str(l) + ".png")
             img = convertTrans(img)
-            img.save(pathnew+str(i)+"/"+str(j)+".png", "PNG")
+            img.save(pathnew+str(i)+"/"+str(l)+".png","PNG")
+    else:
+        for j in range(0,4):
+
+            if i == 0:
+                for k in range(0,2):
+                    img = Image.open(path+str(i)+"/"+str(j)+"-"+str(k)+".png")
+                    img = convertTrans(img)
+                    img.save(pathnew+str(i)+"/"+str(j)+"-"+str(k)+".png", "PNG")
+            else:
+                img = Image.open(path+str(i)+"/"+str(j)+".png")
+                img = convertTrans(img)
+                img.save(pathnew+str(i)+"/"+str(j)+".png", "PNG")

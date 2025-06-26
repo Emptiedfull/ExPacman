@@ -1,0 +1,4 @@
+map[150586:0xc000188000 799428:0xc0000342c0]
+Total lobbies: 2
+WebSocket server started n :8080
+Returning lobbies: [{"name":"799428","players":0,"id":"799428"},{"name":"150586","players":0,"id":"150586"}]
