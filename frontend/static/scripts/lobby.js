@@ -141,7 +141,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const LobbyID = args.pop();
     console.log("Lobby ID:", LobbyID);
 
-    const WsURL = `ws://localhost:8080/ws/${LobbyID}`;
+    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+    const host = window.location.host;
+    const WsURL= `${protocol}://${host}/ws/${LobbyID}`
     console.log("WebSocket URL:", WsURL);
 
     inviteLink = document.getElementById("LobbyId");
@@ -183,7 +185,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     ws.onerror = (error) => {
         console.error("WebSocket error:", error);
-        window.location.href = "/";
+        // window.location.href = "/";
     };
 
     startButton = document.getElementById("startGameButton");

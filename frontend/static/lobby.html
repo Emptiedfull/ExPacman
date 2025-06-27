@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="/static/styles/global.css?v=10">
     <link rel="stylesheet" href="/static/styles/lobby.css?v=223">
 
-    <script src="/static/scripts/lobby.js?v=2" defer></script>
+    <script src="/static/scripts/lobby.js?v=222" defer></script>
 </head>
 
 <body>
@@ -21,13 +21,12 @@
         <h1 class="timer" id="timer" style="display: none;">
             192 
     </h1>
-        <h1 class="homeIcon" id="Home">
+        <h1 class="homeIcon" id="Home" onclick=`window.location.href="/"` >
             <i class="fa fa-home"></i>
         </h1>
     </div>
     <div class="MainContainer">
         <div class="PlayersContainer" id="playersContainer">
-
         </div>
         <div class="GameContainer" id="gameContainer" style="display: none;">
             <canvas id="gameCanvas"></canvas>

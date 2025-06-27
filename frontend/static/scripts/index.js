@@ -1,5 +1,5 @@
 const getLobbies = async () =>{
-    const response = await fetch("http://localhost:8080/lobbies");
+    const response = await fetch("/lobbies");
     if (!response.ok) {
         throw new Error("Network response was not ok");
     }
@@ -38,8 +38,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (value.length > 5){
         input.value = value.slice(0, 5); 
-        overlay.innerHTML = input.value; 
-        return; 
+        overlay.innerHTML = input.value;  
     }
     const cursor = '<span class="blink-cursor">_</span>';
     overlay.innerHTML = value + cursor;
@@ -66,9 +65,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             Namefield = document.getElementById("nameField");
             Namefield.style.display = "flex";
-            Namefield.getElementById("playerName").focus()
+            document.getElementById("playerName").focus()
 
             updateOverlay();
+            console.log("updating overlay")
+
             
         })
     })
@@ -104,7 +105,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 )
 
 const createLobby = async (name) =>{
-     const response = await fetch("http://localhost:8080/create")
+     const response = await fetch("/create")
         if (!response.ok) {
             throw new Error("Network response was not ok");
         }
