@@ -382,7 +382,7 @@ func (g *GameState) gametick(lobby *Lobby, powerupChan chan int, soundchan chan 
 			soundchan <- "death_0.wav"
 			for _, user := range lobby.Users {
 				if user.pacman {
-					user.Score -= 50
+
 				} else {
 					if user.Enemy == g.Board.Cells[g.PlayerPositions[0][0]][g.PlayerPositions[0][1]].enemy {
 						user.Score += 100
@@ -401,7 +401,6 @@ func (g *GameState) gametick(lobby *Lobby, powerupChan chan int, soundchan chan 
 				} else {
 					if user.Enemy == g.Board.Cells[g.PlayerPositions[0][0]][g.PlayerPositions[0][1]].enemy {
 						enemy = user
-						user.Score -= 50
 
 						id := int(enemy.Enemy)
 						g.Board.Cells[g.PlayerPositions[0][0]][g.PlayerPositions[0][1]].enemy = NoPlayer
@@ -418,9 +417,9 @@ func (g *GameState) gametick(lobby *Lobby, powerupChan chan int, soundchan chan 
 		g.Board.Cells[g.PlayerPositions[0][0]][g.PlayerPositions[0][1]].background = empty
 		for _, user := range lobby.Users {
 			if user.pacman {
-				user.Score += 10
+				user.Score += 5
 			} else {
-				user.Score -= 5
+
 			}
 		}
 	}

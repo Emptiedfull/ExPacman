@@ -1,10 +1,5 @@
 package main
 
-import (
-	"fmt"
-	"time"
-)
-
 var Lobbies = make(map[string]*Lobby)
 
 func main() {
@@ -19,10 +14,7 @@ func main() {
 	// }()
 	// Game.startGame()
 	createLobby()
-	time.Sleep(1 * time.Second)
-	createLobby()
-	fmt.Println(Lobbies)
-	fmt.Println("Total lobbies:", len(Lobbies))
+
 	setUpServer()
 
 	// board := ParseBoardString(boardString)
